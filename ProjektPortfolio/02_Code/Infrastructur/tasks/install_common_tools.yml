@@ -1,0 +1,15 @@
+# Task: install common Tools
+- name: Install common tools
+  ansible.builtin.apt:
+    name:
+      - curl
+      - net-tools
+      - jq
+      - open-vm-tools
+      - ca-certificates
+      - chrony
+      - vim
+      - ncdu
+      - snapd
+    state: present
+    update_cache: yes

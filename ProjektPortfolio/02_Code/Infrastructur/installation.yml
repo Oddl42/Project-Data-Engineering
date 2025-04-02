@@ -1,0 +1,18 @@
+# Ansible Installation:
+- name: Machine Set-Up
+  host: all
+  become: yes
+  tasks:
+    # Task 1: install common tools
+    - name: install common tools
+      import_tasks: tasks/install_common_tools.yml
+    
+    # Task 2: install Docker
+    - name: install Docker
+      import_tasks: tasks/install_docker.yml
+    
+    # Task 3: install Minikube
+    - name: install Minikube
+      import_tasks: tasks/install_minikube.yml
+    
+    

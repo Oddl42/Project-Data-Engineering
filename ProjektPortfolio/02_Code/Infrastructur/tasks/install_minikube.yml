@@ -1,0 +1,18 @@
+# Task: install minikube
+- name: Install Minikube snap
+  community.general.snap:
+    name: minikube
+    classic: true
+    channel: latest/stable
+
+- name: Install Kubectl snap
+  community.general.snap:
+    name: kubectl
+    classic: true
+    channel: latest/stable
+
+- name: Install HELM snap
+  community.general.snap:
+      name: helm
+      classic: true
+      channel: latest/stable
