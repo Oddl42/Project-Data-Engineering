@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: python-dashboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: python-dashboard
+  template:
+    metadata:
+      labels:
+        app: python-dashboard
+    spec:
+      containers:
+      - name: python-dashboard
+        image: <dein_dockerhub_user>/python-dashboard:latest
+        ports:
+          - containerPort: 8050

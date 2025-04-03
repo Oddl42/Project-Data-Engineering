@@ -1,0 +1,12 @@
+name: my_environment
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - dash
+  - plotly
+  - pandas
+  # - bokeh
+  #- pip:
+    # Hier könnten weitere pip-Pakete gelistet werden
+    # - some-other-package

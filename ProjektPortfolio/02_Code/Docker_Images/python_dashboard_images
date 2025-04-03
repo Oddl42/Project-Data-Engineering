@@ -1,0 +1,21 @@
+# Wähle das offizielle Miniconda-Image als Basis
+FROM continuumio/miniconda3
+
+# Wechsle in ein Arbeitsverzeichnis
+WORKDIR /app
+
+# Kopiere die environment.yml ins Image
+COPY environment.yml /app/
+
+# Erstelle die Conda-Umgebung
+RUN conda env create -f environment.yml
+
+# Stelle sicher, dass "conda" im richtigen Pfad verfügbar ist,
+# und setze standardmäßig eine Shell, die das Aktivieren der Umgebung erlaubt
+SHELL ["conda", "run", "-n", "my_dashboard_environment", "/bin/bash", "-c"]
+
+# Kopiere den restlichen Code ins Image
+COPY . /app
+
+# Starte die Anwendung
+CMD ["python", "app.py"]

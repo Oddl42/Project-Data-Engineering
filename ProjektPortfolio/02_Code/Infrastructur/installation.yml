@@ -1,6 +1,6 @@
 # Ansible Installation:
 - name: Machine Set-Up
-  host: all
+  hosts: localhost
   become: yes
   tasks:
     # Task 1: install common tools
