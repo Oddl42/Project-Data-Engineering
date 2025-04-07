@@ -15,4 +15,6 @@
     - name: install Minikube
       import_tasks: tasks/install_minikube.yml
     
+
+    # TODO: Initialize MonogDB
     

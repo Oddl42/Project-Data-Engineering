@@ -6,7 +6,11 @@ dependencies:
   - dash
   - plotly
   - pandas
+  - findspark
+  - pyspark
+  - openjdk=11
+  - pymongo
   # - bokeh
   #- pip:
-    # Hier könnten weitere pip-Pakete gelistet werden
+    # if more pip-packages needed
     # - some-other-package
