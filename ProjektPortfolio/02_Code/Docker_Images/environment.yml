@@ -10,6 +10,8 @@ dependencies:
   - pyspark
   - openjdk=11
   - pymongo
+  - schedule
+  - yfinance
   # - bokeh
   #- pip:
     # if more pip-packages needed

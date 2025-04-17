@@ -10,7 +10,8 @@ from pymongo import MongoClient
 
 # MongoD-Connection-URI (local instance)
 uri = "mongodb://127.0.0.1:27017"
-
+        
+        
 # initialize DB
 def initialize_database():
     client = MongoClient(uri)
@@ -18,6 +19,11 @@ def initialize_database():
 
     # Datenbank und Sammlung auswählen
     database = client["stockDB"]
+    
+    if "tickers" in database.list_collection_names():
+        database["tickers"].drop()
+        print(f"Collection tickers wurde gelöscht.")
+    
     collection = database["tickers"]
 
     # Beispiel-Daten für Börsenticker
@@ -30,7 +36,8 @@ def initialize_database():
         {"symbol": "KLAC", "name": "KLA Corporation", "market": "NASDAQ"},
         {"symbol": "AMD", "name": "Advanced Micro Devices Inc", "market": "NASDAQ"},
         {"symbol": "OKTA", "name": "Okta Inc", "market": "NASDAQ"},
-        {"symbol": "CTHR", "name": "Charter Communications, Inc.", "market": "NASDAQ"}
+        {"symbol": "CTHR", "name": "Charter Communications, Inc.", "market": "NASDAQ"},
+        {"symbol": "NEM", "name": "Newmont Corporations, Inc.", "market": "NASDAQ"}
     ]
 
     # Daten in die Sammlung einfügen
