@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Apr  9 19:42:46 2025
+Created on Thu Apr 17 23:39:01 2025
 
 @author: willket
 """
 
 from dash import Dash, html, dcc, Input, Output, State, callback_context
 from pymongo import MongoClient
+import plotly.graph_objs as go  # Für die Ticker-Plots
 
 # Verbindung zur MongoDB herstellen
 uri = "mongodb://127.0.0.1:27017"
@@ -25,36 +26,53 @@ tickers = list(tickers_collection.find({}, {"_id": 0, "symbol": 1, "name": 1}))
 
 # Layout der Dash-App
 app.layout = html.Div([
-    html.H1("Ticker-Auswahl"),
-    html.Div(id="checkbox-container", children=[
-        dcc.Checklist(
-            id="ticker-checkboxes",
-            options=[{"label": f"{ticker['name']} ({ticker['symbol']})", "value": ticker["symbol"]} for ticker in tickers],
-            value=[],  # Initial leer, wird durch Callback gefüllt
-            inline=False  # Checkboxen untereinander
-        )
-    ]),
-    html.Button("Alle auswählen", id="select-all-button", n_clicks=0),
-    html.Div(id="output"),
-    html.Div([
-        html.H2("Zeitauswahl"),
-        html.Div(
-            id="time-selection-bar",
-            children=[
-                html.Button("1m", id="1m", n_clicks=0, className="time-button"),
-                html.Button("5m", id="5m", n_clicks=0, className="time-button"),
-                html.Button("10m", id="10m", n_clicks=0, className="time-button"),
-                html.Button("15m", id="15m", n_clicks=0, className="time-button"),
-                html.Button("30m", id="30m", n_clicks=0, className="time-button"),
-                html.Button("1h", id="1h", n_clicks=0, className="time-button"),
-                html.Button("4h", id="4h", n_clicks=0, className="time-button"),
-                html.Button("T", id="T", n_clicks=0, className="time-button"),
-                html.Button("W", id="W", n_clicks=0, className="time-button"),
-                html.Button("M", id="M", n_clicks=0, className="time-button"),
-            ],
-            style={"display": "flex", "gap": "10px"}
-        ),
-        html.Div(id="time-selection-output", style={"marginTop": "20px"}),
+    dcc.Tabs([
+        dcc.Tab(label="Settings", children=[
+            html.Div([
+                html.H1("Zeitauswahl"),
+                html.Div(
+                    id="time-selection-bar",
+                    children=[
+                        html.Button("1m", id="1m", n_clicks=0, className="time-button"),
+                        html.Button("5m", id="5m", n_clicks=0, className="time-button"),
+                        html.Button("10m", id="10m", n_clicks=0, className="time-button"),
+                        html.Button("15m", id="15m", n_clicks=0, className="time-button"),
+                        html.Button("30m", id="30m", n_clicks=0, className="time-button"),
+                        html.Button("1h", id="1h", n_clicks=0, className="time-button"),
+                        html.Button("4h", id="4h", n_clicks=0, className="time-button"),
+                        html.Button("T", id="T", n_clicks=0, className="time-button"),
+                        html.Button("W", id="W", n_clicks=0, className="time-button"),
+                        html.Button("M", id="M", n_clicks=0, className="time-button"),
+                    ],
+                    style={"display": "flex", "gap": "10px"}
+                ),
+                html.Div(id="time-selection-output", style={"marginTop": "20px"}),
+            ]),
+            
+            html.H2("Ticker-Auswahl"),
+            html.Div(id="checkbox-container", children=[
+                dcc.Checklist(
+                    id="ticker-checkboxes",
+                    options=[{"label": f"{ticker['name']} ({ticker['symbol']})", "value": ticker["symbol"]} for ticker in tickers],
+                    value=[],  # Initial leer, wird durch Callback gefüllt
+                    inline=False  # Checkboxen untereinander
+                )
+            ]),
+            html.Button("Alle auswählen", id="select-all-button", n_clicks=0),
+            html.Div(id="output"),
+        ]),
+
+        dcc.Tab(label="Plots", children=[
+            html.H1("Ticker-Plots"),
+            html.Div([
+                dcc.Dropdown(
+                    id="plot-ticker-dropdown",
+                    options=[{"label": f"{ticker['name']} ({ticker['symbol']})", "value": ticker["symbol"]} for ticker in tickers],
+                    placeholder="Wählen Sie einen Ticker aus",
+                ),
+                dcc.Graph(id="ticker-plot")
+            ])
+        ])
     ])
 ])
 
@@ -67,12 +85,27 @@ app.layout = html.Div([
     State("ticker-checkboxes", "options")
 )
 def manage_checkboxes(n_clicks, selected_symbols, options):
+    """
+    Verwalte die Auswahl der Checkboxen und beschränke die maximale Auswahl auf 5 Ticker.
+
+    Args:
+        n_clicks (int): Anzahl der Klicks auf den "Alle auswählen"-Button.
+        selected_symbols (list): Liste der aktuell ausgewählten Ticker-Symbole.
+        options (list): Liste der verfügbaren Ticker-Optionen.
+
+    Returns:
+        tuple: Aktualisierte Liste der ausgewählten Ticker und eine Ausgabemeldung.
+    """
     ctx = callback_context
     triggered_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
+    max_ticker_limit = 5  # Maximale Anzahl an auswählbaren Tickern
 
     if triggered_id == "select-all-button" and n_clicks > 0:
         # Wenn der "Alle auswählen"-Button geklickt wurde
         all_symbols = [option["value"] for option in options]
+        if len(all_symbols) > max_ticker_limit:
+            return [], f"Fehler: Es können maximal {max_ticker_limit} Ticker ausgewählt werden. Bitte Key Updaten"
         # Datenbank aktualisieren
         selected_tickers_collection.delete_many({})
         selected_tickers_collection.insert_many(
@@ -82,6 +115,8 @@ def manage_checkboxes(n_clicks, selected_symbols, options):
 
     elif triggered_id == "ticker-checkboxes":
         # Wenn die Checkboxen geändert wurden
+        if len(selected_symbols) > max_ticker_limit:
+            return [], f"Fehler: Es können maximal {max_ticker_limit} Ticker ausgewählt werden. Bitte Key Updaten"
         selected_tickers_collection.delete_many({})
         selected_tickers_collection.insert_many(
             [{"symbol": ticker["symbol"], "name": ticker["name"]} for ticker in tickers if ticker["symbol"] in selected_symbols]
@@ -93,6 +128,7 @@ def manage_checkboxes(n_clicks, selected_symbols, options):
         selected_tickers = list(selected_tickers_collection.find({}, {"_id": 0, "symbol": 1}))
         initial_symbols = [ticker["symbol"] for ticker in selected_tickers]
         return initial_symbols, f"Ausgewählte Ticker: {', '.join(initial_symbols)}"
+
 
 # Callback für die Zeitauswahl
 @app.callback(
@@ -130,6 +166,28 @@ def update_time_selection(*n_clicks):
         output_text = f"Ausgewählte Zeiteinstellung: {selected_time['value']}"
 
     return styles + [output_text]
+
+
+# Callback für den Plot der Ticker
+@app.callback(
+    Output("ticker-plot", "figure"),
+    Input("plot-ticker-dropdown", "value")
+)
+def update_ticker_plot(selected_ticker):
+    """
+    Callback zum Aktualisieren des Ticker-Plots basierend auf der Auswahl.
+
+    Args:
+        selected_ticker (str): Das ausgewählte Ticker-Symbol.
+
+    Returns:
+        plotly.graph_objs.Figure: Der aktualisierte Plot.
+    """
+    if not selected_ticker:
+        return go.Figure()  # Leerer Plot, wenn kein Ticker ausgewählt ist
+
+    # Beispiel-Daten (hier: Dummy-Daten)
+    # In der Praxis sollten die Daten aus der Datenbank abgerufen werden
 
 # App ausführen
 if __name__ == "__main__":
